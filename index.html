@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axiøm — Chroniques du Panthéon</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:#080610;--deep:#0E0B1A;--surface:#14102A;--panel:#1A1530;
+  --border:#2E2550;--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#7A5E1A;
+  --violet:#7F77DD;--violet-light:#AFA9EC;--violet-dim:#3C3489;
+  --text:#E8E4F4;--text-dim:#9B96B8;--text-faint:#514D6E;
+  --red:#8B2020;--green:#1A5C2A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--void);color:var(--text);font-family:'Crimson Text',Georgia,serif;min-height:100vh;overflow-x:hidden;}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d,3s) var(--delay,0s) infinite alternate ease-in-out;}
+@keyframes twinkle{from{opacity:.06}to{opacity:.55}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(8,6,16,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;}
+.nav-logo{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.1em;color:var(--gold);}
+.nav-tabs{display:flex;gap:.2rem;}
+.nav-tab{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:.32rem .7rem;border-radius:6px;border:1px solid transparent;background:none;color:var(--text-faint);cursor:pointer;transition:all .2s;}
+.nav-tab.active,.nav-tab:hover{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,.07);}
+.nav-right{display:flex;gap:.5rem;align-items:center;}
+.last-maj{font-size:11px;color:var(--text-faint);font-style:italic;}
+.btn-admin{font-family:'Cinzel',serif;font-size:10px;padding:.3rem .65rem;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-faint);cursor:pointer;transition:all .2s;}
+.btn-admin:hover{color:var(--violet-light);border-color:var(--violet);}
+
+/* PAGES */
+.page{display:none;position:relative;z-index:1;padding:70px 0 3rem;min-height:100vh;}
+.page.active{display:block;}
+.page-header{text-align:center;padding:2rem 1.25rem 2rem;}
+.page-header h1{font-family:'Cinzel',serif;font-size:clamp(20px,5vw,40px);font-weight:700;
+  background:linear-gradient(135deg,var(--gold-light),var(--violet-light),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.page-header p{font-size:15px;font-style:italic;color:var(--text-dim);}
+.content{max-width:860px;margin:0 auto;padding:0 1.25rem;}
+
+/* LOADING */
+.loading{text-align:center;padding:3rem;font-family:'Cinzel',serif;font-size:13px;color:var(--text-faint);letter-spacing:.1em;}
+
+/* ═══ TIMELINE ÉVÉNEMENTS ═══ */
+.timeline{position:relative;padding-left:2rem;}
+.timeline::before{content:'';position:absolute;left:.6rem;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,var(--border),transparent);}
+.tl-item{position:relative;margin-bottom:1.5rem;}
+.tl-dot{position:absolute;left:-1.65rem;top:.35rem;width:10px;height:10px;border-radius:50%;border:2px solid var(--gold);background:var(--void);}
+.tl-dot.majeur{background:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.5);}
+.tl-dot.important{background:var(--violet);border-color:var(--violet);box-shadow:0 0 8px rgba(127,119,221,.4);}
+.tl-dot.info{background:var(--surface);border-color:var(--border);}
+.tl-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;transition:border-color .2s;}
+.tl-card:hover{border-color:var(--gold-dim);}
+.tl-top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem;}
+.tl-cat{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;text-transform:uppercase;padding:.2rem .6rem;border-radius:99px;border:1px solid;}
+.cat-evenement{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,.08);}
+.cat-revelation{color:var(--violet-light);border-color:var(--violet);background:rgba(127,119,221,.1);}
+.cat-mort{color:#E07070;border-color:var(--red);background:rgba(139,32,32,.15);}
+.cat-alliance{color:#70C080;border-color:var(--green);background:rgba(26,92,42,.15);}
+.cat-annonce{color:var(--text-dim);border-color:var(--border);background:var(--surface);}
+.tl-date{font-family:'Cinzel',serif;font-size:10px;color:var(--text-faint);margin-left:auto;}
+.tl-titre{font-family:'Cinzel',serif;font-size:14px;color:var(--text);margin-bottom:.35rem;}
+.tl-desc{font-size:15px;color:var(--text-dim);line-height:1.75;}
+.tl-persos{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}
+.perso-tag{font-size:11px;padding:.15rem .55rem;border-radius:99px;background:var(--surface);border:1px solid var(--border);color:var(--text-faint);}
+
+/* ═══ ARCS ═══ */
+.arcs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+.arc-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;transition:all .25s;}
+.arc-card:hover{border-color:var(--gold-dim);transform:translateY(-2px);}
+.arc-top{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.6rem;}
+.arc-icon{font-size:22px;flex-shrink:0;line-height:1;}
+.arc-name{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);}
+.arc-dieu{font-size:12px;color:var(--text-faint);font-style:italic;}
+.arc-status{display:inline-block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .6rem;border-radius:99px;margin-bottom:.6rem;}
+.status-actif{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid var(--gold-dim);}
+.status-termine{background:rgba(26,92,42,.2);color:#70C080;border:1px solid var(--green);}
+.status-disponible{background:var(--surface);color:var(--text-faint);border:1px solid var(--border);}
+.status-verrouille{background:rgba(139,32,32,.15);color:#E07070;border:1px solid var(--red);}
+.arc-desc{font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:.5rem;}
+.arc-joueurs{font-size:12px;color:var(--text-faint);font-style:italic;}
+.arc-progress{height:3px;background:var(--border);border-radius:3px;margin-top:.7rem;overflow:hidden;}
+.arc-progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--gold));border-radius:3px;transition:width .5s;}
+
+/* ═══ STATUTS PERSOS ═══ */
+.statuts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;}
+.statut-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;display:flex;align-items:center;gap:.7rem;}
+.statut-icon{font-size:20px;flex-shrink:0;}
+.statut-name{font-family:'Cinzel',serif;font-size:13px;color:var(--text);margin-bottom:.15rem;}
+.statut-voie{font-size:12px;color:var(--text-faint);font-style:italic;}
+.statut-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:99px;margin-top:.25rem;display:inline-block;}
+.sb-vivant{background:rgba(26,92,42,.2);color:#70C080;border:1px solid var(--green);}
+.sb-mort{background:rgba(139,32,32,.2);color:#E07070;border:1px solid var(--red);}
+.sb-disparu{background:rgba(127,119,221,.15);color:var(--violet-light);border:1px solid var(--violet);}
+.sb-inconnu{background:var(--surface);color:var(--text-faint);border:1px solid var(--border);}
+
+/* ═══ ADMIN MODAL ═══ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,6,16,.93);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;animation:fadeIn .2s;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--panel);border:1px solid var(--violet);border-radius:18px;padding:1.5rem;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;position:relative;}
+.modal h2{font-family:'Cinzel',serif;font-size:17px;color:var(--gold);margin-bottom:1rem;}
+.modal-close{position:absolute;top:.9rem;right:.9rem;background:none;border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{border-color:var(--violet);color:var(--text);}
+.form-section{margin-bottom:1.5rem;}
+.form-section-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem;}
+.form-row.full{grid-template-columns:1fr;}
+.field-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet-light);display:block;margin-bottom:.3rem;}
+.field-input,.field-select,.field-textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:border-color .2s;}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--violet);}
+.field-select option{background:var(--deep);}
+.field-textarea{min-height:80px;resize:vertical;}
+.btn-submit{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.4rem;background:linear-gradient(135deg,var(--violet-dim),var(--violet));color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s;width:100%;margin-top:.5rem;}
+.btn-submit:hover{opacity:.85;}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;}
+.btn-danger-sm{font-family:'Cinzel',serif;font-size:9px;padding:.25rem .6rem;border-radius:5px;border:1px solid var(--red);background:rgba(139,32,32,.2);color:#E07070;cursor:pointer;transition:all .2s;}
+.btn-danger-sm:hover{background:rgba(139,32,32,.4);}
+.admin-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.admin-tab{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-faint);cursor:pointer;transition:all .2s;}
+.admin-tab.active{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,.08);}
+.success-msg{font-size:13px;color:#70C080;text-align:center;padding:.5rem;font-style:italic;}
+.error-msg{font-size:13px;color:#E07070;padding:.4rem;font-style:italic;}
+.existing-items{margin-top:.75rem;}
+.existing-item{display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;background:var(--surface);border:1px solid var(--border);border-radius:7px;margin-bottom:.4rem;font-size:13px;color:var(--text-dim);}
+.existing-item span{flex:1;}
+
+/* LOGIN */
+.login-box{background:var(--panel);border:1px solid var(--violet);border-radius:16px;padding:1.75rem;max-width:360px;width:100%;}
+.login-box h2{font-family:'Cinzel',serif;font-size:17px;color:var(--gold);margin-bottom:1rem;text-align:center;}
+
+@media(max-width:480px){
+  .arcs-grid{grid-template-columns:1fr;}
+  .statuts-grid{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .nav-tab{font-size:9px;padding:.28rem .5rem;}
+  .last-maj{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+
+<nav>
+  <span class="nav-logo">Axiøm · Chroniques</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('evenements', event)">📜 Événements</button>
+    <button class="nav-tab" onclick="showPage('arcs', event)">⚔ Arcs</button>
+    <button class="nav-tab" onclick="showPage('statuts', event)">👁 Statuts</button>
+  </div>
+  <div class="nav-right">
+    <span class="last-maj" id="last-maj"></span>
+    <button class="btn-admin" onclick="openLogin()">⚙ Admin</button>
+  </div>
+</nav>
+
+<!-- PAGES -->
+<div class="page active" id="page-evenements">
+  <div class="page-header">
+    <h1>Chroniques d'Axiøm</h1>
+    <p>Ce qui s'est passé. Pour ne jamais se perdre.</p>
+  </div>
+  <div class="content">
+    <div class="timeline" id="timeline-content"><div class="loading">Chargement des chroniques…</div></div>
+  </div>
+</div>
+
+<div class="page" id="page-arcs">
+  <div class="page-header">
+    <h1>Progression des Arcs</h1>
+    <p>État actuel des quêtes en cours et terminées.</p>
+  </div>
+  <div class="content">
+    <div class="arcs-grid" id="arcs-content"><div class="loading">Chargement…</div></div>
+  </div>
+</div>
+
+<div class="page" id="page-statuts">
+  <div class="page-header">
+    <h1>Statuts des Personnages</h1>
+    <p>Vivants, morts, disparus. L'état du Panthéon.</p>
+  </div>
+  <div class="content">
+    <div class="statuts-grid" id="statuts-content"><div class="loading">Chargement…</div></div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="modal-login">
+  <div class="login-box">
+    <h2>⚙ Accès Admin</h2>
+    <label class="field-label">Mot de passe</label>
+    <input class="field-input" type="password" id="login-pwd" placeholder="…" onkeydown="if(event.key==='Enter')checkLogin()" style="margin-bottom:.75rem;">
+    <button class="btn-submit" onclick="checkLogin()">Entrer</button>
+    <p class="error-msg" id="login-err" style="display:none;margin-top:.4rem;">Mot de passe incorrect.</p>
+    <p style="text-align:center;margin-top:.6rem;"><button onclick="closeModal('modal-login')" style="background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;font-style:italic;">Annuler</button></p>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-admin')">×</button>
+    <h2>⚙ Panneau Admin</h2>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('evenement',this)">+ Événement</button>
+      <button class="admin-tab" onclick="switchAdminTab('arc',this)">+ Arc</button>
+      <button class="admin-tab" onclick="switchAdminTab('statut',this)">+ Statut perso</button>
+      <button class="admin-tab" onclick="switchAdminTab('gerer',this)">Gérer</button>
+    </div>
+    <div id="admin-panel"></div>
+    <p class="success-msg" id="admin-success" style="display:none;"></p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+// CONFIG
+// ══════════════════════════════
+const BIN_ID = '6a90c176f5f4af5e294b948f';
+const API_KEY = '$2a$10$U4rbBQQTpeVgGtfOzA493uopHCK5m19wkdSFCVZ2YASy01xuPMKhq';
+const BASE = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+const ADMIN_PWD = 'fromage';
+
+let data = { evenements: [], arcs: [], statuts: [], meta: { derniere_maj: '', saison: 'Saison 1' } };
+let adminLoggedIn = false;
+let currentAdminTab = 'evenement';
+
+// ══════════════════════════════
+// API
+// ══════════════════════════════
+async function fetchData() {
+  try {
+    const r = await fetch(BASE + '/latest', { headers: { 'X-Access-Key': API_KEY } });
+    const j = await r.json();
+    data = j.record || data;
+    if (!data.evenements) data.evenements = [];
+    if (!data.arcs) data.arcs = [];
+    if (!data.statuts) data.statuts = [];
+    if (!data.meta) data.meta = { derniere_maj: '', saison: 'Saison 1' };
+  } catch(e) { console.error('Fetch error', e); }
+}
+
+async function saveData() {
+  data.meta.derniere_maj = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  try {
+    await fetch(BASE, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Access-Key': API_KEY },
+      body: JSON.stringify(data)
+    });
+    updateLastMaj();
+    return true;
+  } catch(e) { return false; }
+}
+
+// ══════════════════════════════
+// RENDER
+// ══════════════════════════════
+function updateLastMaj() {
+  const el = document.getElementById('last-maj');
+  if (data.meta.derniere_maj) el.textContent = 'Maj : ' + data.meta.derniere_maj;
+}
+
+const CAT_CLASSES = { evenement:'cat-evenement', revelation:'cat-revelation', mort:'cat-mort', alliance:'cat-alliance', annonce:'cat-annonce' };
+const CAT_LABELS = { evenement:'Événement', revelation:'Révélation', mort:'Mort / Chute', alliance:'Alliance', annonce:'Annonce' };
+const DOT_CLASSES = { majeur:'majeur', important:'important', info:'info' };
+
+function renderEvenements() {
+  const c = document.getElementById('timeline-content');
+  if (!data.evenements.length) { c.innerHTML = '<p style="color:var(--text-faint);font-style:italic;padding:1rem 0;">Aucun événement enregistré pour le moment.</p>'; return; }
+  const sorted = [...data.evenements].reverse();
+  c.innerHTML = sorted.map(e => `
+    <div class="tl-item">
+      <div class="tl-dot ${e.importance||'info'}"></div>
+      <div class="tl-card">
+        <div class="tl-top">
+          <span class="tl-cat ${CAT_CLASSES[e.categorie]||'cat-annonce'}">${CAT_LABELS[e.categorie]||e.categorie}</span>
+          ${e.saison?`<span style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-faint);">${e.saison}</span>`:''}
+          <span class="tl-date">${e.date||''}</span>
+        </div>
+        <div class="tl-titre">${e.titre}</div>
+        <div class="tl-desc">${e.description}</div>
+        ${e.personnages&&e.personnages.length?`<div class="tl-persos">${e.personnages.map(p=>`<span class="perso-tag">${p}</span>`).join('')}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+const ARC_STATUS_LABELS = { actif:'En cours', termine:'Terminé', disponible:'Disponible', verrouille:'Verrouillé' };
+const ARC_STATUS_CLS = { actif:'status-actif', termine:'status-termine', disponible:'status-disponible', verrouille:'status-verrouille' };
+
+function renderArcs() {
+  const c = document.getElementById('arcs-content');
+  if (!data.arcs.length) { c.innerHTML = '<p style="color:var(--text-faint);font-style:italic;padding:1rem 0;">Aucun arc enregistré.</p>'; return; }
+  c.innerHTML = data.arcs.map(a => `
+    <div class="arc-card">
+      <div class="arc-top">
+        <div class="arc-icon">${a.icon||'⚡'}</div>
+        <div><div class="arc-name">${a.nom}</div><div class="arc-dieu">${a.dieu||''}</div></div>
+      </div>
+      <span class="arc-status ${ARC_STATUS_CLS[a.statut]||'status-disponible'}">${ARC_STATUS_LABELS[a.statut]||a.statut}</span>
+      <div class="arc-desc">${a.description||''}</div>
+      ${a.joueurs?`<div class="arc-joueurs">Joueurs : ${a.joueurs}</div>`:''}
+      ${a.progression!==undefined?`<div class="arc-progress"><div class="arc-progress-fill" style="width:${a.progression}%"></div></div>`:''}
+    </div>`).join('');
+}
+
+const STATUT_CLS = { vivant:'sb-vivant', mort:'sb-mort', disparu:'sb-disparu', inconnu:'sb-inconnu' };
+const STATUT_LABELS = { vivant:'Vivant·e', mort:'Mort·e', disparu:'Disparu·e', inconnu:'Inconnu' };
+
+function renderStatuts() {
+  const c = document.getElementById('statuts-content');
+  if (!data.statuts.length) { c.innerHTML = '<p style="color:var(--text-faint);font-style:italic;padding:1rem 0;">Aucun statut enregistré.</p>'; return; }
+  c.innerHTML = data.statuts.map(s => `
+    <div class="statut-card">
+      <div class="statut-icon">${s.icon||'👁'}</div>
+      <div>
+        <div class="statut-name">${s.nom}</div>
+        <div class="statut-voie">${s.voie||''}</div>
+        <span class="statut-badge ${STATUT_CLS[s.statut]||'sb-inconnu'}">${STATUT_LABELS[s.statut]||s.statut}</span>
+        ${s.note?`<div style="font-size:11px;color:var(--text-faint);margin-top:.2rem;font-style:italic;">${s.note}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function renderAll() { renderEvenements(); renderArcs(); renderStatuts(); updateLastMaj(); }
+
+// ══════════════════════════════
+// NAV
+// ══════════════════════════════
+function showPage(name, event) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
+}
+
+// ══════════════════════════════
+// ADMIN
+// ══════════════════════════════
+function openLogin() { document.getElementById('modal-login').classList.add('open'); setTimeout(()=>document.getElementById('login-pwd').focus(),100); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function checkLogin() {
+  const v = document.getElementById('login-pwd').value;
+  if (v === ADMIN_PWD) {
+    adminLoggedIn = true;
+    closeModal('modal-login');
+    document.getElementById('login-pwd').value = '';
+    document.getElementById('login-err').style.display = 'none';
+    document.getElementById('modal-admin').classList.add('open');
+    renderAdminTab('evenement');
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+    document.getElementById('login-pwd').value = '';
+  }
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+function switchAdminTab(tab, btn) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('admin-success').style.display = 'none';
+  renderAdminTab(tab);
+}
+
+function renderAdminTab(tab) {
+  const p = document.getElementById('admin-panel');
+  if (tab === 'evenement') {
+    p.innerHTML = `
+      <div class="form-section">
+        <div class="form-section-title">Nouvel événement</div>
+        <div class="form-row">
+          <div><label class="field-label">Titre *</label><input class="field-input" id="ev-titre" placeholder="Titre de l'événement"></div>
+          <div><label class="field-label">Date affichée</label><input class="field-input" id="ev-date" placeholder="ex: 24 juin, An 3"></div>
+        </div>
+        <div class="form-row">
+          <div><label class="field-label">Catégorie</label>
+            <select class="field-select" id="ev-cat">
+              <option value="evenement">Événement</option>
+              <option value="revelation">Révélation</option>
+              <option value="mort">Mort / Chute</option>
+              <option value="alliance">Alliance</option>
+              <option value="annonce">Annonce</option>
+            </select>
+          </div>
+          <div><label class="field-label">Importance</label>
+            <select class="field-select" id="ev-importance">
+              <option value="info">Normale</option>
+              <option value="important">Importante</option>
+              <option value="majeur">Majeure ✦</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <label class="field-label">Saison / Arc</label>
+          <input class="field-input" id="ev-saison" placeholder="ex: Saison 1 — Arc de Ran">
+        </div>
+        <div class="form-row full">
+          <label class="field-label">Description *</label>
+          <textarea class="field-textarea" id="ev-desc" placeholder="Ce qui s'est passé, en détail. Les joueurs liront ça pour se remettre dans le bain."></textarea>
+        </div>
+        <div class="form-row full">
+          <label class="field-label">Personnages impliqués (séparés par des virgules)</label>
+          <input class="field-input" id="ev-persos" placeholder="ex: Ran, Pantalone, Dottore">
+        </div>
+        <button class="btn-submit" onclick="addEvenement()">Ajouter l'événement</button>
+      </div>`;
+  } else if (tab === 'arc') {
+    p.innerHTML = `
+      <div class="form-section">
+        <div class="form-section-title">Arc / Quête</div>
+        <div class="form-row">
+          <div><label class="field-label">Nom de l'arc *</label><input class="field-input" id="arc-nom" placeholder="ex: Arc de Ran"></div>
+          <div><label class="field-label">Emoji icône</label><input class="field-input" id="arc-icon" placeholder="ex: 🦟" style="max-width:80px;"></div>
+        </div>
+        <div class="form-row">
+          <div><label class="field-label">Dieu / Territoire</label><input class="field-input" id="arc-dieu" placeholder="ex: Ran · L'Essaim"></div>
+          <div><label class="field-label">Statut</label>
+            <select class="field-select" id="arc-statut">
+              <option value="disponible">Disponible</option>
+              <option value="actif">En cours</option>
+              <option value="termine">Terminé</option>
+              <option value="verrouille">Verrouillé</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <label class="field-label">Description (pour les joueurs)</label>
+          <textarea class="field-textarea" id="arc-desc" placeholder="Résumé de l'arc, sans spoilers importants."></textarea>
+        </div>
+        <div class="form-row">
+          <div><label class="field-label">Joueurs actifs</label><input class="field-input" id="arc-joueurs" placeholder="ex: Alice, Bob"></div>
+          <div><label class="field-label">Progression (0-100)</label><input class="field-input" id="arc-prog" type="number" min="0" max="100" placeholder="ex: 60"></div>
+        </div>
+        <button class="btn-submit" onclick="addArc()">Ajouter / Mettre à jour</button>
+      </div>`;
+  } else if (tab === 'statut') {
+    p.innerHTML = `
+      <div class="form-section">
+        <div class="form-section-title">Statut d'un personnage</div>
+        <div class="form-row">
+          <div><label class="field-label">Nom du personnage *</label><input class="field-input" id="st-nom" placeholder="ex: Ran"></div>
+          <div><label class="field-label">Emoji</label><input class="field-input" id="st-icon" placeholder="ex: 🦟" style="max-width:80px;"></div>
+        </div>
+        <div class="form-row">
+          <div><label class="field-label">Voie</label><input class="field-input" id="st-voie" placeholder="ex: Propagation"></div>
+          <div><label class="field-label">Statut</label>
+            <select class="field-select" id="st-statut">
+              <option value="vivant">Vivant·e</option>
+              <option value="mort">Mort·e</option>
+              <option value="disparu">Disparu·e</option>
+              <option value="inconnu">Inconnu</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <label class="field-label">Note (optionnel)</label>
+          <input class="field-input" id="st-note" placeholder="ex: Mort lors de l'arc de Ran, fin spéciale">
+        </div>
+        <button class="btn-submit" onclick="addStatut()">Ajouter / Mettre à jour</button>
+      </div>`;
+  } else if (tab === 'gerer') {
+    p.innerHTML = `
+      <div class="form-section">
+        <div class="form-section-title">Événements (${data.evenements.length})</div>
+        <div class="existing-items">${data.evenements.length?[...data.evenements].reverse().map((e,i)=>`
+          <div class="existing-item">
+            <span>${e.titre} <span style="color:var(--text-faint);font-size:11px;">(${e.date||'sans date'})</span></span>
+            <button class="btn-danger-sm" onclick="deleteItem('evenements',${data.evenements.length-1-i})">Supprimer</button>
+          </div>`).join(''):'<p style="font-size:13px;color:var(--text-faint);font-style:italic;">Aucun événement.</p>'}
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Arcs (${data.arcs.length})</div>
+        <div class="existing-items">${data.arcs.length?data.arcs.map((a,i)=>`
+          <div class="existing-item">
+            <span>${a.icon||''} ${a.nom} — <span style="font-size:11px;color:var(--text-faint);">${ARC_STATUS_LABELS[a.statut]||a.statut}</span></span>
+            <button class="btn-danger-sm" onclick="deleteItem('arcs',${i})">Supprimer</button>
+          </div>`).join(''):'<p style="font-size:13px;color:var(--text-faint);font-style:italic;">Aucun arc.</p>'}
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Statuts (${data.statuts.length})</div>
+        <div class="existing-items">${data.statuts.length?data.statuts.map((s,i)=>`
+          <div class="existing-item">
+            <span>${s.icon||''} ${s.nom} — <span style="font-size:11px;color:var(--text-faint);">${STATUT_LABELS[s.statut]||s.statut}</span></span>
+            <button class="btn-danger-sm" onclick="deleteItem('statuts',${i})">Supprimer</button>
+          </div>`).join(''):'<p style="font-size:13px;color:var(--text-faint);font-style:italic;">Aucun statut.</p>'}
+        </div>
+      </div>`;
+  }
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('admin-success');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+
+async function addEvenement() {
+  const titre = document.getElementById('ev-titre').value.trim();
+  const desc = document.getElementById('ev-desc').value.trim();
+  if (!titre || !desc) { alert('Titre et description requis.'); return; }
+  const persoRaw = document.getElementById('ev-persos').value.trim();
+  const ev = {
+    id: Date.now(),
+    titre,
+    date: document.getElementById('ev-date').value.trim(),
+    categorie: document.getElementById('ev-cat').value,
+    importance: document.getElementById('ev-importance').value,
+    saison: document.getElementById('ev-saison').value.trim(),
+    description: desc,
+    personnages: persoRaw ? persoRaw.split(',').map(s=>s.trim()).filter(Boolean) : []
+  };
+  data.evenements.push(ev);
+  const ok = await saveData();
+  if (ok) { renderAll(); showSuccess('Événement ajouté !'); ['ev-titre','ev-date','ev-desc','ev-persos','ev-saison'].forEach(id=>document.getElementById(id).value=''); }
+}
+
+async function addArc() {
+  const nom = document.getElementById('arc-nom').value.trim();
+  if (!nom) { alert('Nom requis.'); return; }
+  const arc = {
+    id: Date.now(),
+    nom,
+    icon: document.getElementById('arc-icon').value.trim() || '⚡',
+    dieu: document.getElementById('arc-dieu').value.trim(),
+    statut: document.getElementById('arc-statut').value,
+    description: document.getElementById('arc-desc').value.trim(),
+    joueurs: document.getElementById('arc-joueurs').value.trim(),
+    progression: parseInt(document.getElementById('arc-prog').value)||0
+  };
+  const idx = data.arcs.findIndex(a=>a.nom.toLowerCase()===nom.toLowerCase());
+  if (idx>=0) data.arcs[idx] = arc; else data.arcs.push(arc);
+  const ok = await saveData();
+  if (ok) { renderAll(); showSuccess('Arc mis à jour !'); ['arc-nom','arc-icon','arc-dieu','arc-desc','arc-joueurs','arc-prog'].forEach(id=>document.getElementById(id).value=''); }
+}
+
+async function addStatut() {
+  const nom = document.getElementById('st-nom').value.trim();
+  if (!nom) { alert('Nom requis.'); return; }
+  const st = {
+    nom,
+    icon: document.getElementById('st-icon').value.trim() || '👁',
+    voie: document.getElementById('st-voie').value.trim(),
+    statut: document.getElementById('st-statut').value,
+    note: document.getElementById('st-note').value.trim()
+  };
+  const idx = data.statuts.findIndex(s=>s.nom.toLowerCase()===nom.toLowerCase());
+  if (idx>=0) data.statuts[idx] = st; else data.statuts.push(st);
+  const ok = await saveData();
+  if (ok) { renderAll(); showSuccess('Statut mis à jour !'); ['st-nom','st-icon','st-voie','st-note'].forEach(id=>document.getElementById(id).value=''); }
+}
+
+async function deleteItem(type, idx) {
+  if (!confirm('Supprimer cet élément ?')) return;
+  data[type].splice(idx,1);
+  const ok = await saveData();
+  if (ok) { renderAll(); renderAdminTab('gerer'); showSuccess('Supprimé.'); }
+}
+
+// ══════════════════════════════
+// ÉTOILES & INIT
+// ══════════════════════════════
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s`;
+    c.appendChild(s);
+  }
+})();
+
+(async()=>{ await fetchData(); renderAll(); })();
+</script>
+</body>
+</html>
